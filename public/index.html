@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Manager</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0f1117;color:#e2e8f0;font-family:system-ui,sans-serif;min-height:100vh}
+    .app{padding:24px;max-width:1100px;margin:0 auto}
+    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+    .header h1{font-size:20px;font-weight:500;color:#f1f5f9}
+    .header-right{display:flex;align-items:center;gap:10px}
+    .badge-info{font-size:13px;color:#64748b;background:#1e2330;padding:4px 12px;border-radius:20px;border:0.5px solid #2d3448}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+    .stat{background:#161b27;border:0.5px solid #2d3448;border-radius:12px;padding:14px 16px}
+    .stat-label{font-size:12px;color:#64748b;margin-bottom:4px}
+    .stat-val{font-size:22px;font-weight:500;color:#f1f5f9}
+    .toolbar{display:flex;gap:10px;margin-bottom:16px;align-items:center}
+    .search-wrap{flex:1;position:relative}
+    .search-wrap input{width:100%;background:#161b27;border:0.5px solid #2d3448;color:#e2e8f0;padding:8px 12px 8px 36px;border-radius:8px;font-size:14px;outline:none}
+    .search-wrap input:focus{border-color:#4f6ef7}
+    .search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#64748b;font-size:14px;pointer-events:none}
+    select.filter{background:#161b27;border:0.5px solid #2d3448;color:#e2e8f0;padding:8px 12px;border-radius:8px;font-size:14px;outline:none}
+    .btn-add{background:#4f6ef7;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:14px;cursor:pointer;white-space:nowrap;font-weight:500}
+    .btn-add:hover{background:#3d5ce0}
+    .table-wrap{background:#161b27;border:0.5px solid #2d3448;border-radius:12px;overflow:hidden;margin-bottom:20px}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    thead{background:#1a2035}
+    th{padding:10px 14px;text-align:left;font-weight:500;color:#94a3b8;font-size:12px;text-transform:uppercase;letter-spacing:0.05em}
+    td{padding:11px 14px;border-top:0.5px solid #1e2330;color:#cbd5e1}
+    td.name{color:#f1f5f9;font-weight:500}
+    tr:hover td{background:#1a2035}
+    .badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:500}
+    .badge-Electronics{background:#1e3a5f;color:#7eb8f7}
+    .badge-Accessories{background:#1a3320;color:#6fcf97}
+    .badge-Audio{background:#3b2060;color:#bb86fc}
+    .badge-Storage{background:#3b2a10;color:#f9a825}
+    .badge-Components{background:#3b1010;color:#ef9a9a}
+    .badge-default{background:#1e2330;color:#94a3b8}
+    .price{color:#6fcf97;font-weight:500}
+    .btn-del{background:transparent;border:0.5px solid #3d1a1a;color:#f87171;padding:4px 10px;border-radius:6px;font-size:12px;cursor:pointer}
+    .btn-del:hover{background:#3d1a1a}
+
+    /* Pagination */
+    .pagination{display:flex;align-items:center;justify-content:space-between;padding:0 4px}
+    .page-info{font-size:13px;color:#64748b}
+    .page-btns{display:flex;gap:6px}
+    .btn-page{background:#161b27;border:0.5px solid #2d3448;color:#94a3b8;padding:6px 12px;border-radius:6px;font-size:13px;cursor:pointer}
+    .btn-page:hover:not(:disabled){background:#1e2330;color:#e2e8f0}
+    .btn-page:disabled{opacity:0.4;cursor:not-allowed}
+    .btn-page.active{background:#4f6ef7;color:#fff;border-color:#4f6ef7}
+
+    /* Modal */
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center}
+    .modal-bg.open{display:flex}
+    .modal{background:#161b27;border:0.5px solid #2d3448;border-radius:14px;padding:24px;width:100%;max-width:420px}
+    .modal h2{font-size:16px;font-weight:500;color:#f1f5f9;margin-bottom:18px}
+    .form-group{margin-bottom:14px}
+    .form-group label{display:block;font-size:12px;color:#94a3b8;margin-bottom:5px}
+    .form-group input,.form-group select,.form-group textarea{width:100%;background:#0f1117;border:0.5px solid #2d3448;color:#e2e8f0;padding:8px 12px;border-radius:8px;font-size:14px;outline:none;font-family:inherit}
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:#4f6ef7}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+    .btn-cancel{background:transparent;border:0.5px solid #2d3448;color:#94a3b8;padding:8px 16px;border-radius:8px;font-size:14px;cursor:pointer}
+    .btn-cancel:hover{background:#1e2330}
+    .btn-submit{background:#4f6ef7;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:500}
+    .btn-submit:hover{background:#3d5ce0}
+    .error-msg{color:#f87171;font-size:12px;margin-top:4px;display:none}
+
+    /* Toast */
+    .toast{position:fixed;bottom:24px;right:24px;padding:12px 18px;border-radius:10px;font-size:14px;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none}
+    .toast.success{background:#1a3320;color:#6fcf97;border:0.5px solid #2d5a38}
+    .toast.error{background:#3d1a1a;color:#f87171;border:0.5px solid #5a2d2d}
+    .toast.show{opacity:1}
+
+    .loading{text-align:center;padding:32px;color:#64748b;font-size:14px}
+    .empty{text-align:center;padding:32px;color:#64748b;font-size:14px}
+    .conn-status{display:flex;align-items:center;gap:6px;font-size:12px}
+    .dot{width:7px;height:7px;border-radius:50%;background:#6fcf97}
+    .dot.offline{background:#f87171}
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>Product Manager</h1>
+    <div class="header-right">
+      <div class="conn-status">
+        <div class="dot" id="conn-dot"></div>
+        <span id="conn-label" style="color:#64748b">Connecting...</span>
+      </div>
+      <span class="badge-info" id="time-badge"></span>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Total Produk</div><div class="stat-val" id="stat-total">-</div></div>
+    <div class="stat"><div class="stat-label">Total Stok</div><div class="stat-val" id="stat-stok">-</div></div>
+    <div class="stat"><div class="stat-label">Kategori</div><div class="stat-val" id="stat-cat">-</div></div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <span class="search-icon">&#128269;</span>
+      <input type="text" id="search" placeholder="Cari produk..." oninput="onSearch()">
+    </div>
+    <select class="filter" id="filter-cat" onchange="loadProducts()">
+      <option value="">Semua Kategori</option>
+    </select>
+    <button class="btn-add" onclick="openModal()">+ Tambah Produk</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nama Produk</th>
+          <th>Kategori</th>
+          <th>Harga</th>
+          <th>Stok</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <tr><td colspan="6"><div class="loading">Memuat data...</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<!-- Modal Tambah Produk -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h2>Tambah Produk Baru</h2>
+    <div class="form-group">
+      <label>Nama Produk *</label>
+      <input type="text" id="f-name" placeholder="cth: Laptop ASUS ROG">
+      <div class="error-msg" id="err-name">Nama produk wajib diisi (min 3 karakter)</div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Harga (Rp) *</label>
+        <input type="number" id="f-price" placeholder="0" min="1">
+        <div class="error-msg" id="err-price">Harga harus lebih dari 0</div>
+      </div>
+      <div class="form-group">
+        <label>Stok *</label>
+        <input type="number" id="f-stock" placeholder="0" min="0">
+        <div class="error-msg" id="err-stock">Stok tidak boleh negatif</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Kategori *</label>
+      <select id="f-cat">
+        <option>Electronics</option>
+        <option>Accessories</option>
+        <option>Audio</option>
+        <option>Storage</option>
+        <option>Components</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Deskripsi (opsional)</label>
+      <textarea id="f-desc" rows="2" placeholder="Deskripsi singkat produk..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Batal</button>
+      <button class="btn-submit" id="btn-submit" onclick="addProduct()">Simpan Produk</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = 'http://localhost:4000/api/v1';
+  const API_KEY = 'rahasia-123';
+  let currentPage = 1;
+  let totalPages = 1;
+  let searchTimeout = null;
+
+//init
+  async function init() {
+    updateTime();
+    setInterval(updateTime, 60000);
+    await loadCategories();
+    await loadProducts();
+  }
+
+  function updateTime() {
+    const now = new Date();
+    document.getElementById('time-badge').textContent =
+      now.toLocaleDateString('id-ID', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+  }
+
+//load kategori untuk filter
+  async function loadCategories() {
+    try {
+      const res = await fetch(`${API}/products/categories`);
+      const data = await res.json();
+      if (data.success) {
+        const select = document.getElementById('filter-cat');
+        data.data.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.category;
+          opt.textContent = `${c.category} (${c.total_products})`;
+          select.appendChild(opt);
+        });
+      }
+    } catch(e) {}
+  }
+
+//ini loading produk dengan pagination, search, dan filter kategori. Juga update status koneksi ke server.
+  async function loadProducts(page = 1) {
+    currentPage = page;
+    const search = document.getElementById('search').value;
+    const category = document.getElementById('filter-cat').value;
+
+    const params = new URLSearchParams({
+      page, limit: 8,
+      sort_by: 'created_at',
+      sort_order: 'DESC',
+      ...(search && {search}),
+      ...(category && {category})
+    });
+
+    try {
+      const res = await fetch(`${API}/products?${params}`);
+      const data = await res.json();
+
+      //ini updatenya
+      setOnline(true);
+
+      if (data.success) {
+        renderTable(data.data);
+        renderPagination(data.meta.pagination);
+        updateStats(data.meta.pagination.total_data);
+      }
+    } catch(e) {
+      setOnline(false);
+      document.getElementById('tbody').innerHTML =
+        `<tr><td colspan="6"><div class="empty">Gagal terhubung ke server. Pastikan backend berjalan di port 3000.</div></td></tr>`;
+    }
+  }
+
+//ini render table
+  function renderTable(products) {
+    const tbody = document.getElementById('tbody');
+    if (!products.length) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty">Tidak ada produk ditemukan</div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = products.map((p, i) => `
+      <tr>
+        <td style="color:#475569">${((currentPage-1)*8)+(i+1)}</td>
+        <td class="name">${p.name}</td>
+        <td><span class="badge badge-${p.category} badge-default">${p.category}</span></td>
+        <td class="price">Rp ${Number(p.price).toLocaleString('id-ID')}</td>
+        <td>${p.stock}</td>
+        <td><button class="btn-del" onclick="deleteProduct(${p.id}, '${p.name}')">Hapus</button></td>
+      </tr>`).join('');
+  }
+
+//ini pagination
+  function renderPagination(meta) {
+    totalPages = meta.total_pages;
+    const el = document.getElementById('pagination');
+    if (meta.total_pages <= 1) { el.innerHTML = ''; return; }
+
+    let btns = '';
+    for (let i = 1; i <= meta.total_pages; i++) {
+      btns += `<button class="btn-page ${i===meta.current_page?'active':''}" onclick="loadProducts(${i})">${i}</button>`;
+    }
+    el.innerHTML = `
+      <span class="page-info">Menampilkan ${meta.per_page*(meta.current_page-1)+1}–${Math.min(meta.per_page*meta.current_page, meta.total_data)} dari ${meta.total_data} produk</span>
+      <div class="page-btns">
+        <button class="btn-page" onclick="loadProducts(${meta.current_page-1})" ${!meta.has_prev?'disabled':''}>&#8249;</button>
+        ${btns}
+        <button class="btn-page" onclick="loadProducts(${meta.current_page+1})" ${!meta.has_next?'disabled':''}>&#8250;</button>
+      </div>`;
+  }
+
+//ini update stats
+  async function updateStats(total) {
+    document.getElementById('stat-total').textContent = total;
+    try {
+      const res = await fetch(`${API}/products?limit=1000`);
+      const data = await res.json();
+      if (data.success) {
+        const allProducts = data.data;
+        const stok = allProducts.reduce((a, p) => a + p.stock, 0);
+        document.getElementById('stat-stok').textContent = stok.toLocaleString('id-ID');
+        const cats = [...new Set(allProducts.map(p => p.category))].length;
+        document.getElementById('stat-cat').textContent = cats;
+      }
+    } catch(e) {}
+  }
+
+//ini search
+  function onSearch() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => loadProducts(1), 400);
+  }
+//ini delete
+  async function deleteProduct(id, name) {
+    if (!confirm(`Yakin mau hapus "${name}"?`)) return;
+    try {
+      const res = await fetch(`${API}/products/${id}`, {
+        method: 'DELETE',
+        headers: {'x-api-key': API_KEY}
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Produk berhasil dihapus', 'success');
+        loadProducts(currentPage);
+      } else {
+        showToast(data.message || 'Gagal menghapus produk', 'error');
+      }
+    } catch(e) {
+      showToast('Gagal terhubung ke server', 'error');
+    }
+  }
+//ini add
+  function openModal() {
+    document.getElementById('modal').classList.add('open');
+    document.getElementById('f-name').focus();
+  }
+  function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+    clearForm();
+  }
+  function clearForm() {
+    ['f-name','f-price','f-stock','f-desc'].forEach(id => document.getElementById(id).value='');
+    ['err-name','err-price','err-stock'].forEach(id => document.getElementById(id).style.display='none');
+  }
+
+  async function addProduct() {
+    const name = document.getElementById('f-name').value.trim();
+    const price = parseInt(document.getElementById('f-price').value) || 0;
+    const stock = parseInt(document.getElementById('f-stock').value);
+    const category = document.getElementById('f-cat').value;
+    const description = document.getElementById('f-desc').value.trim();
+
+    let valid = true;
+    if (name.length < 3) {
+      document.getElementById('err-name').style.display = 'block'; valid = false;
+    } else {
+      document.getElementById('err-name').style.display = 'none';
+    }
+    if (price <= 0) {
+      document.getElementById('err-price').style.display = 'block'; valid = false;
+    } else {
+      document.getElementById('err-price').style.display = 'none';
+    }
+    if (isNaN(stock) || stock < 0) {
+      document.getElementById('err-stock').style.display = 'block'; valid = false;
+    } else {
+      document.getElementById('err-stock').style.display = 'none';
+    }
+    if (!valid) return;
+
+    const btn = document.getElementById('btn-submit');
+    btn.textContent = 'Menyimpan...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`${API}/products`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','x-api-key': API_KEY},
+        body: JSON.stringify({name, price, stock, category, description})
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Produk "${name}" berhasil ditambahkan!`, 'success');
+        closeModal();
+        loadProducts(1);
+      } else {
+        const errMsg = data.errors ? data.errors.map(e=>e.message).join(', ') : data.message;
+        showToast(errMsg, 'error');
+      }
+    } catch(e) {
+      showToast('Gagal terhubung ke server', 'error');
+    } finally {
+      btn.textContent = 'Simpan Produk';
+      btn.disabled = false;
+    }
+  }
+
+//ini toast notification
+  function showToast(msg, type='success') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `toast ${type} show`;
+    setTimeout(() => el.className = `toast ${type}`, 2800);
+  }
+
+//ini konek status
+  function setOnline(online) {
+    document.getElementById('conn-dot').className = online ? 'dot' : 'dot offline';
+    document.getElementById('conn-label').textContent = online ? 'Terhubung' : 'Offline';
+    document.getElementById('conn-label').style.color = online ? '#6fcf97' : '#f87171';
+  }
+
+  //close saat keluarg
+  document.getElementById('modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  init();
+</script>
+</body>
+</html>
